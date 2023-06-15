@@ -22,7 +22,7 @@ class RLController:
         rospy.on_shutdown(self.on_shutdown)
 
         # Init controller
-        self.controller = Go1Controller(policy_path="TODO.pt")
+        self.controller = Go1Controller(policy_path="group1.pt")
         self.controller.connect_and_stand()
 
         # Initialize subscriber
