@@ -3,14 +3,14 @@
     <arg name="rl_policy" default="false"/>
 
     <!--Goal Broadcaster-->
-    <node pkg="mrss_motion" type="goal_broadcaster.py"
+    <node pkg="mrss_motion_pub_1" type="goal_broadcaster.py"
           name="goal_broadcaster" ns="pointnav" />
 
     <!--Map Broadcaster-->
-    <node pkg="mrss_motion" type="map_broadcaster.py" name="map_broadcaster"/>
+    <node pkg="mrss_motion_pub_1" type="map_broadcaster.py" name="map_broadcaster"/>
 
     <!--Planner-->
-    <node pkg="mrss_motion" type="planner.py"
+    <node pkg="mrss_motion_pub_1" type="planner.py"
           name="goal_follower" ns="mrss_motion" />
 
     <!--Low level Unitree controller-->
@@ -20,7 +20,7 @@
 
     <!--Low level RL controller-->
     <group if="$(arg rl_policy)">
-        <node pkg="mrss_motion" type="rl_policy.py"
+        <node pkg="mrss_motion_pub_1" type="rl_policy.py"
               name="rl_policy" ns="mrss_motion" />
     </group>
 
