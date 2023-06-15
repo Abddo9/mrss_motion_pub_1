@@ -140,3 +140,6 @@ This node should work out of the box.
 If you have ROS on your computer, the main [TagSLAM MRSS](https://github.com/sachaMorin/tagslam_root/blob/master/README-MRSS.md) README contains
 instructions to playback all topics. This will allow you to work on your code even if you do not currently have 
 access to the robot.
+
+
+source local-ros.sh
