@@ -33,7 +33,7 @@ class Planner:
         self.map = json.loads(msg.data)
 
         # TODO BEGIN MRSS: Use map for planning
-        goal = np.array(self.map[list(self.map.keys())[0]])
+        goal = np.array(self.map[[k for k in self.map.keys() if 'goal' in k][0]])
 
         # END MRSS
 
