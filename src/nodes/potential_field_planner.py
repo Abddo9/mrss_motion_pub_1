@@ -13,6 +13,7 @@ class PotentialFieldPlanner():
         self.k_rep   = k_rep
         self.vel_max = vel_max
         self.dist_min = 1
+        self.pos_obs
 		        
     def set_target_pos (self, end_pos):
         self.end_pos = end_pos
@@ -26,7 +27,7 @@ class PotentialFieldPlanner():
                 
     def get_desired_pos_vel (self, pos_fbk):
     
-        vel_des = self.get_attractive_force ( pos_fbk )
+        _, vel_des = self.get_attractive_force ( pos_fbk )
         pos_des = pos_fbk + vel_des * self.dt 
         
         return pos_des, vel_des
@@ -39,12 +40,13 @@ class PotentialFieldPlanner():
       	d = numpy.linalg.norm(vel_des)
       	if d > self.vel_max:
             vel_des = vel_des / d * self.vel_max
-      	return vel_des
+        pos_des = pos_fbk + vel_des * self.dt 
+      	return pos_des, vel_des
       	
     def get_avoidance_force ( self, pos_fbk ):
         pos_fbk = numpy.array(pos_fbk)
 
-        vel_att = self.get_attractive_force ( pos_fbk ) 
+        _, vel_att = self.get_attractive_force ( pos_fbk ) 
         vel_rep = self.get_repulsive_force ( pos_fbk ) 
         vel_des = vel_att + vel_rep 
         	   

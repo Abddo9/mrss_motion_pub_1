@@ -44,13 +44,14 @@ class Planner:
         self.k_rep     = 1
         self.vel_max   = 0.5
         self.planner = None
+        self.obstacle = None
+        self.planner_dic = {}
+
         # END MRSS
         # END MRSS
 
     def map_callback(self, msg):
         self.map = json.loads(msg.data)
-        self.planner_dic = {}
-
         # TODO BEGIN MRSS: Use map for planning
         for k in self.map.keys():
             new_key = remove_special_characters(k)
@@ -60,39 +61,40 @@ class Planner:
                 self.planner_dic['obstacle'] = np.array(self.map[k])
 
         goal = np.concatenate([self.planner_dic['goal'], [0.]])
-        rospy.logwarn("***************")
-        rospy.logwarn(goal)
-        obstacle = np.concatenate([self.planner_dic['obstacle'], [0.]])
-        rospy.logwarn("***************")
-
-
         # Potential Field Planner
-        self.planner   = PotentialFieldPlanner(goal, 1 / self.rate_number, self.k_att, self.k_rep, self.vel_max)
-        self.planner.set_obstacle_distance(1.5)
-        self.planner.set_obstacle_position(obstacle)
+        self.planner = PotentialFieldPlanner(goal, 1 / self.rate_number, self.k_att, self.k_rep, self.vel_max)
+
+        try:
+            self.obstacle = np.concatenate([self.planner_dic['obstacle'], [0.]])
+            self.planner.set_obstacle_distance(1.5)
+            self.planner.set_obstacle_position(self.obstacle)
+        except:
+            pass
+
         # END MRSS
 
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
 
         # TODO BEGIN MRSS: Update the current command
-        n_goal = np.linalg.norm(goal)
+        n_goal = np.linalg.norm(goal[:2])
         if n_goal < 0.1:
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
             self.cmd.angular.z = 0.
-            rospy.logwarn("***eeee****")
         else:
             # Vanilla commands
             # self.cmd.linear.x = goal[0]/n_goal * 0.15
             # self.cmd.linear.y = goal[1]/n_goal * 0.15
             # angle_error = np.arctan2(goal[1], goal[0]) 
             # self.cmd.angular.z = np.clip(angle_error, -.2, .2)
-            # rospy.logwarn("***eeeaasdfe****")
             # Potential Field Planner commands
-            pos_des, lin_vel =	self.planner.get_avoidance_force([0., 0., 0.])
-            self.cmd.linear.x = lin_vel[0] * 0.15
-            self.cmd.linear.y = lin_vel[1] * 0.15
+            if self.obstacle:
+                pos_des, lin_vel =	self.planner.get_avoidance_force([0., 0., 0.])
+            else:
+                pos_des, lin_vel =	self.planner.get_attractive_force([0., 0., 0.])
+            self.cmd.linear.x = lin_vel[0]
+            self.cmd.linear.y = lin_vel[1]
             angle = np.arctan2(pos_des[1], pos_des[0]) 
             self.cmd.angular.z = np.clip(angle, -.2, .2)
             
