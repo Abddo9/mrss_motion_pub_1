@@ -84,10 +84,12 @@ class Planner:
             self.cmd.angular.z = np.clip(angle_error, -.2, .2)
 
             # Potential Field Planner commands
-            # pos_des, lin_vel =	self.planner.get_avoidance_force(robot_pos)
+            # pos_des, lin_vel =	self.planner.get_avoidance_force([0, 0])
             # self.cmd.linear.x = lin_vel[0] * 0.15
             # self.cmd.linear.y = lin_vel[1] * 0.15
-            # self.cmd.angular.z = 0.
+            # angle = np.arctan2(pos_des[1], pos_des[0]) 
+            # self.cmd.angular.z = np.clip(angle, -.2, .2)
+            
         # END MRSS
 
     def spin(self):
