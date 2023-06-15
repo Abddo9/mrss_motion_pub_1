@@ -11,7 +11,7 @@
 
     <!--Planner-->
     <node pkg="mrss_motion_pub_1" type="planner.py"
-          name="goal_follower" ns="mrss_motion" />
+          name="goal_follower" ns="mrss_motion_pub_1" />
 
     <!--Low level Unitree controller-->
     <group if="$(arg twist)">
@@ -21,7 +21,7 @@
     <!--Low level RL controller-->
     <group if="$(arg rl_policy)">
         <node pkg="mrss_motion_pub_1" type="rl_policy.py"
-              name="rl_policy" ns="mrss_motion" />
+              name="rl_policy" ns="mrss_motion_pub_1" />
     </group>
 
 </launch>
