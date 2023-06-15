@@ -2,10 +2,21 @@
 # Reads the map output (see map_broadcaster.py) and publishes twist commands to reach the goal
 
 import numpy as np
+from potential_field_planner import PotentialFieldPlanner
 import rospy
 from std_msgs.msg import String
 import geometry_msgs.msg
 import json
+import re
+
+def remove_special_characters(input_string):
+    # Define the regular expression pattern to match non-alphanumeric characters
+    pattern = r'[^a-zA-Z0-9]'
+
+    # Use the sub() function from the re module to replace non-alphanumeric characters with an empty string
+    result = re.sub(pattern, '', input_string)
+
+    return result
 
 
 class Planner:
@@ -26,15 +37,34 @@ class Planner:
         self.rate = rospy.Rate(10)  # Publisher frequency
 
         # TODO BEGIN MRSS: Add attributes (If needed)
-
+        # set the planner attributes
+        self.time_step = 0.001
+        self.k_att     = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.5]])
+        self.k_rep     = 1
+        self.vel_max   = 0.5
+        self.planner = None
+        # END MRSS
         # END MRSS
 
     def map_callback(self, msg):
         self.map = json.loads(msg.data)
+        self.planner_dic = {}
 
         # TODO BEGIN MRSS: Use map for planning
-        goal = np.array(self.map[[k for k in self.map.keys() if 'goal' in k][0]])
+        for k in self.map.keys():
+            new_key = remove_special_characters(k)
+            if 'obs' not in new_key:
+                self.planner_dic[new_key] = np.array(self.map[k])
+            else:
+                self.planner_dic['obstacle'] = np.array(self.map[k])
 
+        goal = self.planner_dic['goal']
+        obstacle = self.planner_dic['obstacle']
+
+        # Potential Field Planner
+        # self.planner   = PotentialFieldPlanner(goal, 1/self.rate, self.k_att, self.k_rep, self.vel_max)
+        # self.planner.set_obstacle_distance(1.5)
+        # self.planner.set_obstacle_position(obstacle)
         # END MRSS
 
         # Twist
@@ -47,10 +77,17 @@ class Planner:
             self.cmd.linear.y = 0.
             self.cmd.angular.z = 0.
         else:
+            # Vanilla commands
             self.cmd.linear.x = goal[0]/n_goal * 0.15
             self.cmd.linear.y = goal[1]/n_goal * 0.15
             angle_error = np.arctan2(goal[1], goal[0]) 
             self.cmd.angular.z = np.clip(angle_error, -.2, .2)
+
+            # Potential Field Planner commands
+            # pos_des, lin_vel =	self.planner.get_avoidance_force(robot_pos)
+            # self.cmd.linear.x = lin_vel[0] * 0.15
+            # self.cmd.linear.y = lin_vel[1] * 0.15
+            # self.cmd.angular.z = 0.
         # END MRSS
 
     def spin(self):
