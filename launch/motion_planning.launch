@@ -13,15 +13,15 @@
     <!--Planner-->
     <group if="$(eval planner == 'linear')">
     <node pkg="mrss_motion_pub_1" type="linear_planner_ros.py"
-          name="goal_follower" ns="mrss_motion_pub_1" />
+          name="linear_planner_ros" ns="mrss_motion_pub_1" />
     </group>
     <group if="$(eval planner == 'potential')">
     <node pkg="mrss_motion_pub_1" type="potential_field_planner_ros.py"
-          name="goal_follower" ns="mrss_motion_pub_1" />
+          name="potential_field_planner_ros" ns="mrss_motion_pub_1" />
     </group>
     <group if="$(eval planner == 'optimization')">
     <node pkg="mrss_motion_pub_1" type="optimization_planner_ros.py"
-          name="goal_follower" ns="mrss_motion_pub_1" />
+          name="optimization_planner_ros" ns="mrss_motion_pub_1" />
     </group>
 
     <!--Low level Unitree controller-->

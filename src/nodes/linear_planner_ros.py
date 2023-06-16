@@ -38,6 +38,7 @@ class Planner:
         self.rate = rospy.Rate(self.rate_number)  # Publisher frequency
 
         self.goal = np.array([0., 0., 0.])
+        self.planner_dic = {}
 
     def map_callback(self, msg):
         self.map = json.loads(msg.data)

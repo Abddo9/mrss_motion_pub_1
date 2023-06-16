@@ -1,5 +1,5 @@
 import numpy
-
+import rospy
 
 class PotentialFieldPlanner():
     def __init__(self, pos_end, dt, k_att, k_rep, vel_max, dist_min=1):
@@ -57,6 +57,8 @@ class PotentialFieldPlanner():
     	
     def get_repulsive_force(self, pos_fbk):
         print("self.pos_obs=", self.pos_obs, "pos_fbk=", pos_fbk )
+        rospy.loginfo(self.pos_obs)
+        rospy.loginfo(pos_fbk)
         d = numpy.linalg.norm( self.pos_obs[:2] - pos_fbk[:2] )
         
         if d > self.dist_min: # Far enough away, ignore the obstacle

@@ -80,7 +80,9 @@ class Planner:
         # Update goal
         try:
             self.goal = np.concatenate([self.planner_dic['goal'], [0.]]) # Need 'three dimensional' goal position.
+            rospy.loginfo(f"DEBUG: self.goal: {self.goal}")
             self.goal_dist = np.linalg.norm(self.goal[:2])
+            rospy.loginfo(f"DEBUG: modified self.goal: {self.goal}")
             self.planner.set_target_pos(self.goal)
         except:
             rospy.logwarn("Goal not received or parsed in dictionary.")
@@ -110,9 +112,11 @@ class Planner:
             pos_des, lin_vel =	self.planner.get_avoidance_force(self.robot_pos)
             self.cmd.linear.x = lin_vel[0] * 0.5
             self.cmd.linear.y = lin_vel[1] * 0.5
-            angle = compute_angle(lin_vel[:2], self.prev_lin_vel[:2]) 
-            self.cmd.angular.z = np.clip(angle, -.2, .2)
-            self.prev_lin_vel = lin_vel
+            # angle = compute_angle(lin_vel[:2], self.prev_lin_vel[:2]) 
+            # self.cmd.angular.z = np.clip(angle, -.2, .2)
+            # self.prev_lin_vel = lin_vel
+            angle_error = np.arctan2(self.goal[1], self.goal[0]) 
+            self.cmd.angular.z = np.clip(angle_error, -.2, .2)
 
     def spin(self):
         '''
