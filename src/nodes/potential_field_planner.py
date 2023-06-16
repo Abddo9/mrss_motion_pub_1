@@ -1,14 +1,12 @@
-#from collections import deque
-import numpy 
-#import matplotlib.pyplot as plt
+import numpy
 
 
 class PotentialFieldPlanner():
     def __init__(self, pos_end, dt, k_att, k_rep, vel_max, dist_min=1):
         self.pos_end = numpy.array(pos_end)
-        self.dt      = dt     
-        self.k_att   = k_att
-        self.k_rep   = k_rep
+        self.dt = dt
+        self.k_att = k_att
+        self.k_rep = k_rep
         self.vel_max = vel_max
         self.dist_min = dist_min
         self.pos_obs = None
@@ -51,14 +49,10 @@ class PotentialFieldPlanner():
         vel_des = vel_att + vel_rep 
         	   
         # normalize it if the norm is too large
-        d = numpy.linalg.norm(vel_des) 
+        d = numpy.linalg.norm(vel_des)
         if d > self.vel_max:
             vel_des = vel_des / d * self.vel_max
-        
-        pos_des = pos_fbk + vel_des * self.dt 
-        
-       #print(" vel_att=", vel_att, ",vel_rep", vel_rep)
-        
+        pos_des = pos_fbk + vel_des * self.dt
         return pos_des, vel_des
     	
     def get_repulsive_force(self, pos_fbk):
@@ -68,12 +62,12 @@ class PotentialFieldPlanner():
         if d > self.dist_min: # Far enough away, ignore the obstacle
             return numpy.array ([0,0,0])
         else:
-            dd_dq 	= 2 * ( self.pos_obs - pos_fbk )           
-            vel_des = -self.k_rep / (d*d) * (1/d - 1/self.dist_min) * dd_dq            
-            vel_des[2] = 0.0     
+            dd_dq = 2 * (self.pos_obs - pos_fbk)
+            vel_des = -self.k_rep / (d*d) * (1/d - 1/self.dist_min) * dd_dq
+            vel_des[2] = 0.0
             
             # normalize it if the norm is too large
-            d = numpy.linalg.norm(vel_des) 
+            d = numpy.linalg.norm(vel_des)
             if d > self.vel_max:
                 vel_des = vel_des / d * self.vel_max
 

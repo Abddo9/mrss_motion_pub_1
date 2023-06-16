@@ -66,8 +66,7 @@ if __name__ == '__main__':
                 trans = ts.translation_from_matrix(transform_rig_frame)
                 rot = ts.quaternion_from_matrix(transform_rig_frame)
 
-            message[key] = [trans[0], trans[1]]
-
+                message[key] = [trans[0], trans[1]]  # FIXME: yann: I indented this, not sure what it does
 
         # Add timestamp
         time = rospy.Time.now()

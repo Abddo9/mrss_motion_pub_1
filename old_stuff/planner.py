@@ -18,20 +18,6 @@ def remove_special_characters(input_string):
 
     return result
 
-def compute_angle(vector1, vector2):
-    dot_product = np.dot(vector1, vector2)  # Compute the dot product of the two vectors
-    magnitude_product = np.linalg.norm(vector1) * np.linalg.norm(vector2)  # Compute the product of their magnitudes
-    cosine_angle = dot_product / magnitude_product  # Compute the cosine of the angle
-    
-    # Use arccos to compute the angle in radians
-    try:
-        angle_radians = np.arccos(cosine_angle)
-    except:
-        angle_radians = 0.
-
-    if vector1[1] < vector2[1]:
-        angle_radians *= -1
-    return angle_radians
 
 class Planner:
     def __init__(self):
@@ -50,26 +36,23 @@ class Planner:
         self.cmd = None
         self.rate_number = 10
         self.rate = rospy.Rate(self.rate_number)  # Publisher frequency
-        self.prev_lin_vel = np.array([0.0001] * 3) # Start with really small value
 
+        # TODO BEGIN MRSS: Add attributes (If needed)
         # set the planner attributes
-        self.time_step = 1 / self.rate_number
+        self.time_step = 0.001
         self.k_att     = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.5]])
         self.k_rep     = 1
         self.vel_max   = 0.5
+        self.planner = None
+        self.obstacle = None
         self.planner_dic = {}
-        self.goal = np.array([0., 0., 0.])
-        self.robot_pos = np.array([0., 0., 0.])
-        self.dist_min = 1.5 # minimum distance to obstacle
 
-        # Initialize planner
-        self.planner = PotentialFieldPlanner(self.goal, self.time_step, self.k_att, self.k_rep, self.dist_min)
-
+        # END MRSS
+        # END MRSS
 
     def map_callback(self, msg):
         self.map = json.loads(msg.data)
-        
-        # Need to remove special characters from map keys to avoid potential key errors
+        # TODO BEGIN MRSS: Use map for planning
         for k in self.map.keys():
             new_key = remove_special_characters(k)
             if 'obs' not in new_key:
@@ -77,42 +60,45 @@ class Planner:
             else:
                 self.planner_dic['obstacle'] = np.array(self.map[k])
 
-        # Update goal
-        try:
-            self.goal = np.concatenate([self.planner_dic['goal'], [0.]]) # Need 'three dimensional' goal position.
-            self.goal_dist = np.linalg.norm(self.goal[:2])
-            self.planner.set_target_pos(self.goal)
-        except:
-            rospy.logwarn("Goal not received or parsed in dictionary.")
+        goal = np.concatenate([self.planner_dic['goal'], [0.]])
+        # Potential Field Planner
+        self.planner = PotentialFieldPlanner(goal, 1 / self.rate_number, self.k_att, self.k_rep, self.vel_max)
 
-        # Update obstacle
         try:
-            self.obstacle_pos = np.concatenate([self.planner_dic['obstacle'], [0.]]) # Need 'three dimensional' obstacle position.
-            self.planner.set_obstacle_distance(self.dist_min)
-            self.planner.set_obstacle_position(self.obstacle_pos)
-            rospy.loginfo(f"DEBUG: obstacle in planner_dic")
+            self.obstacle = np.concatenate([self.planner_dic['obstacle'], [0.]])
+            self.planner.set_obstacle_distance(1.5)
+            self.planner.set_obstacle_position(self.obstacle)
         except:
-            self.obstacle_pos = None
-            self.planner.set_obstacle_position(self.obstacle_pos)
-            rospy.loginfo(f"DEBUG: obstacle NOT in planner_dic")
+            pass
+
+        # END MRSS
 
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
 
-        # Update the current command
-        # Stop at 0.1 meter from goal
-        if self.goal_dist < 0.1:
+        # TODO BEGIN MRSS: Update the current command
+        n_goal = np.linalg.norm(goal[:2])
+        if n_goal < 0.1:
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
             self.cmd.angular.z = 0.
         else:
+            # Vanilla commands
+            # self.cmd.linear.x = goal[0]/n_goal * 0.15
+            # self.cmd.linear.y = goal[1]/n_goal * 0.15
+            # angle_error = np.arctan2(goal[1], goal[0]) 
+            # self.cmd.angular.z = np.clip(angle_error, -.2, .2)
             # Potential Field Planner commands
-            pos_des, lin_vel =	self.planner.get_avoidance_force(self.robot_pos)
-            self.cmd.linear.x = lin_vel[0] * 0.5
-            self.cmd.linear.y = lin_vel[1] * 0.5
-            angle = compute_angle(lin_vel[:2], self.prev_lin_vel[:2]) 
+            if self.obstacle:
+                pos_des, lin_vel =	self.planner.get_avoidance_force([0., 0., 0.])
+            else:
+                pos_des, lin_vel =	self.planner.get_attractive_force([0., 0., 0.])
+            self.cmd.linear.x = lin_vel[0]
+            self.cmd.linear.y = lin_vel[1]
+            angle = np.arctan2(pos_des[1], pos_des[0]) 
             self.cmd.angular.z = np.clip(angle, -.2, .2)
-            self.prev_lin_vel = lin_vel
+            
+        # END MRSS
 
     def spin(self):
         '''

@@ -37,40 +37,47 @@ class Planner:
         self.rate_number = 10
         self.rate = rospy.Rate(self.rate_number)  # Publisher frequency
 
+        self.goal = np.array([0., 0., 0.])
+
     def map_callback(self, msg):
         self.map = json.loads(msg.data)
-
+        rospy.loginfo(f"DEBUG: map callback.\nMessage: {msg}\nExtracted map:{self.map}")
         # Need to remove special characters from map keys to avoid potential key errors
         for k in self.map.keys():
             new_key = remove_special_characters(k)
             if 'obs' not in new_key:
+                rospy.loginfo(f"DEBUG: new_key has no obs: {new_key}")
                 self.planner_dic[new_key] = np.array(self.map[k])
             else:
+                rospy.loginfo(f"DEBUG: new_key HAS obs and must be obstacle: {new_key}")
                 self.planner_dic['obstacle'] = np.array(self.map[k])
 
-        goal = self.planner_dic['goal']
-
+        rospy.loginfo(f"DEBUG: self.goal: {self.goal}")
+        self.goal = self.planner_dic['goal']
+        rospy.loginfo(f"DEBUG: modified self.goal: {self.goal}")
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
 
         # TODO BEGIN MRSS: Update the current command
-        n_goal = np.linalg.norm(goal)
+        n_goal = np.linalg.norm(self.goal)
+        rospy.loginfo(f"DEBUG: goal norm: {n_goal}")
         if n_goal < 0.1:
+            rospy.loginfo(f"DEBUG: goal reached: {self.goal}")
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
             self.cmd.angular.z = 0.
         else:
             # Linear planner commands
-            self.cmd.linear.x = goal[0]/n_goal * 0.15
-            self.cmd.linear.y = goal[1]/n_goal * 0.15
-            angle_error = np.arctan2(goal[1], goal[0]) 
+            self.cmd.linear.x = self.goal[0]/n_goal * 0.15
+            self.cmd.linear.y = self.goal[1]/n_goal * 0.15
+            angle_error = np.arctan2(self.goal[1], self.goal[0]) 
             self.cmd.angular.z = np.clip(angle_error, -.2, .2)
 
 
     def spin(self):
-        '''
+        """
         Spins the node.
-        '''
+        """
         try:
             while not rospy.is_shutdown():
                 if self.cmd is not None:
@@ -84,9 +91,9 @@ class Planner:
             rospy.loginfo("Shutting down planner.")
 
     def on_shutdown(self):
-        '''
+        """
         Called on node shutdown.
-        '''
+        """
         pass
 
 
