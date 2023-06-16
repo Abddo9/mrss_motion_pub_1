@@ -1,6 +1,7 @@
 <launch>
     <arg name="twist" default="false"/>
     <arg name="rl_policy" default="false"/>
+    <arg name="planner" default="linear" />
 
     <!--Goal Broadcaster-->
     <node pkg="mrss_motion_pub_1" type="goal_broadcaster.py"
@@ -10,8 +11,18 @@
     <node pkg="mrss_motion_pub_1" type="map_broadcaster.py" name="map_broadcaster"/>
 
     <!--Planner-->
-    <node pkg="mrss_motion_pub_1" type="planner.py"
+    <group if="$(eval planner == 'linear')">
+    <node pkg="mrss_motion_pub_1" type="linear_planner_ros.py"
           name="goal_follower" ns="mrss_motion_pub_1" />
+    </group>
+    <group if="$(eval planner == 'potential')">
+    <node pkg="mrss_motion_pub_1" type="potential_field_planner_ros.py"
+          name="goal_follower" ns="mrss_motion_pub_1" />
+    </group>
+    <group if="$(eval planner == 'optimization')">
+    <node pkg="mrss_motion_pub_1" type="optimization_planner_ros.py"
+          name="goal_follower" ns="mrss_motion_pub_1" />
+    </group>
 
     <!--Low level Unitree controller-->
     <group if="$(arg twist)">

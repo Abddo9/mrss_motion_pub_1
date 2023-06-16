@@ -13,10 +13,10 @@ cd ~/tagslam_root/src
 git clone $YOUR_FORK_URL
 ```
 
-Your first commit should be to replace all instances of ```mrss_motion``` with ```$TEAM_NAME``` in the following files:
-- ```tagslam_root/src/$TEAM_NAME/package.xml```
- - ```tagslam_root/src/$TEAM_NAME/CMakeLists.txt```
- - ```tagslam_root/src/$TEAM_NAME/src/launch/motion_planning.launch```
+Your first commit should be to replace all instances of ```mrss_motion``` with ```mrss_motion_pub_1``` in the following files:
+- ```tagslam_root/src/mrss_motion_pub_1/package.xml```
+ - ```tagslam_root/src/mrss_motion_pub_1/CMakeLists.txt```
+ - ```tagslam_root/src/mrss_motion_pub_1/src/launch/motion_planning.launch```
 
 Once this is done, build your package
 
@@ -38,12 +38,12 @@ roslaunch tagslam mrss_laptop.launch rviz:=1
 
 Then you can launch motion planning with
 ```shell
-roslaunch $TEAM_NAME motion_planning.launch twist:=0 rl_policy:=0
+roslaunch mrss_motion_pub_1 motion_planning.launch twist:=1 rl_policy:=0
 ```
 Setting ```twist:=1``` will launch the Unitree controller. The controller will listen to the ```cmd_vel``` topic and track
 the velocities published by the planner node.
 
-Setting ```rl_policy:=1``` will launch an RL controller. Make sure to update your policy path in ```tagslam_root/src/$TEAM_NAME/nodes/rl_policy.py```.
+Setting ```rl_policy:=1``` will launch an RL controller. Make sure to update your policy path in ```tagslam_root/src/mrss_motion_pub_1/nodes/rl_policy.py```.
 Before launching your RL policy, you should always kill the sports mode on the robot. You can do this by calling the
 ̀```./kill-sport-mode.sh``` located under ```~/go1-rl/unitree-api-wrapper```.
 
@@ -61,7 +61,7 @@ We will aim to add basic goal reaching capabilities to the **planner** node.
 
 Following the appropriate lecture, we will attempt to add obstacle avoidance capabilities to the **planner** node following a lecture on planning and motion planning.
 
-All relevant source code is under ```tagslam_root/src/$TEAM_NAME/src/nodes```.
+All relevant source code is under ```tagslam_root/src/mrss_motion_pub_1/src/nodes```.
 
 
 ## map_broadcaster node
@@ -110,7 +110,7 @@ rostopic echo /cmd_vel
 You should update the path to your policy in ```rl_policy.py```.  If you need to run the RL policy
 in isolation, you can run the node
 ```shell
-rosrun $TEAM_NAME rl_policy.py
+rosrun mrss_motion_pub_1 rl_policy.py
 ```
 and in another terminal, stream velocity commands, for example
 ```shell
