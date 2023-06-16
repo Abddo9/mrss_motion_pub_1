@@ -58,15 +58,16 @@ if __name__ == '__main__':
         # Put all other transforms in robot frame
         for key, value in dict_map_frame.items():
             if key is not '/rig':
-                trans = value['trans']
+                trans_mod = value['trans']
                 rot = value['rot']
-                transform = ts.concatenate_matrices(ts.translation_matrix(trans), ts.quaternion_matrix(rot))
+                transform = ts.concatenate_matrices(ts.translation_matrix(trans_mod, ts.quaternion_matrix(rot))
                 transform = np.array(transform)
                 transform_rig_frame = inv_rig @ transform
-                trans = ts.translation_from_matrix(transform_rig_frame)
+                trans_mod = ts.translation_from_matrix(transform_rig_frame)
                 rot = ts.quaternion_from_matrix(transform_rig_frame)
-
-                message[key] = [trans[0], trans[1]]  # FIXME: yann: I indented this, not sure what it does
+                message[key] = [trans_mod[0], trans_mod[1]]
+            else:
+                message[key] = [value['trans'][0], value['trans'][1]]
 
         # Add timestamp
         time = rospy.Time.now()
