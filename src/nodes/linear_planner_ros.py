@@ -75,12 +75,12 @@ class Planner:
             self.cmd.angular.z = ang_vel
 
         # Align towards the goal at the beginning
-        elif self.time_step > self.threshold * 3 and not self.goal_aligned:
+        elif self.time_step >= self.threshold * 3 and not self.goal_aligned:
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
             ang_vel = align_with_goal(self.goal)
             self.cmd.angular.z = ang_vel
-            if ang_vel < 0.05:
+            if ang_vel < 0.01:
                 self.goal_aligned = True
 
         if self.goal_aligned:

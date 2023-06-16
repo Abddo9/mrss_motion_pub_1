@@ -60,7 +60,7 @@ class Planner:
         self.planner_dic = {}
         self.goal = np.array([0., 0., 0.])
         self.robot_pos = np.array([0., 0., 0.])
-        self.dist_min = 1.5 # minimum distance to obstacle
+        self.dist_min = 1. # minimum distance to obstacle
 
         # Initialize planner
         self.planner = PotentialFieldPlanner(self.goal, self.time_step, self.k_att, self.k_rep, self.dist_min)
