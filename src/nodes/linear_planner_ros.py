@@ -41,7 +41,7 @@ class Planner:
         self.goal = None  # np.array([0., 0., 0.])
         self.planner_dic = {}
         self.time_step = 0
-        self.threshold = 500
+        self.threshold = 50
         self.goal_aligned = False
 
     def map_callback(self, msg):
@@ -68,33 +68,33 @@ class Planner:
         rospy.loginfo(f"DEBUG: goal norm: {n_goal}")
 
         # Look around to look for obstacles
-        if self.time_step < self.threshold * 3:
+        # if self.time_step < self.threshold * 3:
+        #     self.cmd.linear.x = 0.
+        #     self.cmd.linear.y = 0.
+        #     ang_vel = rotate_robot(self.time_step, threshold = self.threshold)
+        #     self.cmd.angular.z = ang_vel
+
+        # # Align towards the goal at the beginning
+        # elif self.time_step >= self.threshold * 3 and not self.goal_aligned:
+        #     self.cmd.linear.x = 0.
+        #     self.cmd.linear.y = 0.
+        #     ang_vel = align_with_goal(self.goal)
+        #     self.cmd.angular.z = ang_vel
+        #     if ang_vel < 0.01:
+        #         self.goal_aligned = True
+
+        # if self.goal_aligned:
+        if n_goal < 0.1:
+            rospy.loginfo(f"DEBUG: goal reached: {self.goal}")
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
-            ang_vel = rotate_robot(self.time_step, threshold = self.threshold)
-            self.cmd.angular.z = ang_vel
-
-        # Align towards the goal at the beginning
-        elif self.time_step >= self.threshold * 3 and not self.goal_aligned:
-            self.cmd.linear.x = 0.
-            self.cmd.linear.y = 0.
-            ang_vel = align_with_goal(self.goal)
-            self.cmd.angular.z = ang_vel
-            if ang_vel < 0.01:
-                self.goal_aligned = True
-
-        if self.goal_aligned:
-            if n_goal < 0.1:
-                rospy.loginfo(f"DEBUG: goal reached: {self.goal}")
-                self.cmd.linear.x = 0.
-                self.cmd.linear.y = 0.
-                self.cmd.angular.z = 0.
-            else:
-                # Linear planner commands
-                self.cmd.linear.x = self.goal[0]/n_goal * 0.15
-                self.cmd.linear.y = self.goal[1]/n_goal * 0.15
-                angle_error = np.arctan2(self.goal[1], self.goal[0]) 
-                self.cmd.angular.z = np.clip(angle_error, -.2, .2)
+            self.cmd.angular.z = 0.
+        else:
+            # Linear planner commands
+            self.cmd.linear.x = self.goal[0]/n_goal * 0.15
+            self.cmd.linear.y = self.goal[1]/n_goal * 0.15
+            angle_error = np.arctan2(self.goal[1], self.goal[0]) 
+            self.cmd.angular.z = np.clip(angle_error, -.2, .2)
         
         self.time_step += 1
 

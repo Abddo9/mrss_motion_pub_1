@@ -60,7 +60,7 @@ if __name__ == '__main__':
             if key is not '/rig':
                 trans_mod = value['trans']
                 rot = value['rot']
-                transform = ts.concatenate_matrices(ts.translation_matrix(trans_mod, ts.quaternion_matrix(rot))
+                transform = ts.concatenate_matrices(ts.translation_matrix(trans_mod), ts.quaternion_matrix(rot))
                 transform = np.array(transform)
                 transform_rig_frame = inv_rig @ transform
                 trans_mod = ts.translation_from_matrix(transform_rig_frame)

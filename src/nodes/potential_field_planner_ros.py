@@ -60,7 +60,7 @@ class Planner:
         self.goal = None  # np.array([0., 0., 0.])
         self.planner_dic = {}
         self.time_step = 0
-        self.threshold = 500
+        self.threshold = 50
         self.goal_aligned = False
         self.robot_pos = np.array([0., 0., 0.])
         self.dist_min = 1. # minimum distance to obstacle
@@ -81,7 +81,7 @@ class Planner:
                 self.planner_dic['obstacle'] = np.array(self.map[k])
 
         # Update goal
-        if self.planner_dic['goal']:
+        if self.planner_dic['goal'] is not None:
             self.goal = np.concatenate([self.planner_dic['goal'], [0.]]) # Need 'three dimensional' goal position.
             rospy.loginfo(f"DEBUG: self.goal: {self.goal}")
             self.goal_dist = np.linalg.norm(self.goal[:2])
@@ -91,7 +91,7 @@ class Planner:
             rospy.logwarn("Goal not received or parsed in dictionary.")
 
         # Update obstacle
-        if self.planner_dic['obstacle'] :
+        if self.planner_dic['obstacle'] is not None:
             self.obstacle_pos = np.concatenate([self.planner_dic['obstacle'], [0.]]) # Need 'three dimensional' obstacle position.
             self.planner.set_obstacle_distance(self.dist_min)
             self.planner.set_obstacle_position(self.obstacle_pos)
