@@ -53,17 +53,20 @@ class Planner:
         self.prev_lin_vel = np.array([0.0001] * 3) # Start with really small value
 
         # set the planner attributes
-        self.time_step = 1 / self.rate_number
         self.k_att     = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.5]])
         self.k_rep     = 1
         self.vel_max   = 0.5
         self.planner_dic = {}
-        self.goal = np.array([0., 0., 0.])
+        self.goal = None  # np.array([0., 0., 0.])
+        self.planner_dic = {}
+        self.time_step = 0
+        self.threshold = 500
+        self.goal_aligned = False
         self.robot_pos = np.array([0., 0., 0.])
         self.dist_min = 1. # minimum distance to obstacle
 
         # Initialize planner
-        self.planner = PotentialFieldPlanner(self.goal, self.time_step, self.k_att, self.k_rep, self.dist_min)
+        self.planner = PotentialFieldPlanner(self.goal, 1 / self.rate_number, self.k_att, self.k_rep, self.dist_min)
 
 
     def map_callback(self, msg):

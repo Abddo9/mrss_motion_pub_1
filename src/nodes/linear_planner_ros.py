@@ -41,7 +41,7 @@ class Planner:
         self.goal = None  # np.array([0., 0., 0.])
         self.planner_dic = {}
         self.time_step = 0
-        self.threshold = 2000
+        self.threshold = 500
         self.goal_aligned = False
 
     def map_callback(self, msg):
