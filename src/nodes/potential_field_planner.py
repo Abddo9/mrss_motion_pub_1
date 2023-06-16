@@ -18,7 +18,10 @@ class PotentialFieldPlanner():
         self.dist_min = in_dist_min
 
     def set_obstacle_position(self, in_pos_obs):
-        self.pos_obs = numpy.array(in_pos_obs)
+        if in_pos_obs is None:
+            self.pos_obs = None
+        else:
+            self.pos_obs = numpy.array(in_pos_obs)  
                 
     def get_desired_pos_vel(self, pos_fbk):
         _, vel_des = self.get_attractive_force ( pos_fbk )

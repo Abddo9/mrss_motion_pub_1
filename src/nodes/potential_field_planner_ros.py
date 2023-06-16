@@ -78,24 +78,24 @@ class Planner:
                 self.planner_dic['obstacle'] = np.array(self.map[k])
 
         # Update goal
-        try:
+        if self.planner_dic['goal']:
             self.goal = np.concatenate([self.planner_dic['goal'], [0.]]) # Need 'three dimensional' goal position.
             rospy.loginfo(f"DEBUG: self.goal: {self.goal}")
             self.goal_dist = np.linalg.norm(self.goal[:2])
             rospy.loginfo(f"DEBUG: modified self.goal: {self.goal}")
             self.planner.set_target_pos(self.goal)
-        except:
+        else:
             rospy.logwarn("Goal not received or parsed in dictionary.")
 
         # Update obstacle
-        try:
+        if self.planner_dic['obstacle'] :
             self.obstacle_pos = np.concatenate([self.planner_dic['obstacle'], [0.]]) # Need 'three dimensional' obstacle position.
             self.planner.set_obstacle_distance(self.dist_min)
             self.planner.set_obstacle_position(self.obstacle_pos)
             rospy.loginfo(f"DEBUG: obstacle in planner_dic")
-        except:
-            self.obstacle_pos = None
-            self.planner.set_obstacle_position(self.obstacle_pos)
+        else:
+            # self.obstacle_pos = None
+            # self.planner.set_obstacle_position(self.obstacle_pos)
             rospy.loginfo(f"DEBUG: obstacle NOT in planner_dic")
 
         # Twist
