@@ -40,70 +40,94 @@ class Planner:
         # TODO BEGIN MRSS: Add attributes (If needed)
         # set the planner attributes
         self.time_step = 0.001
-        self.k_att     = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.5]])
-        self.k_rep     = 1
-        self.vel_max   = 0.5
+        self.k_att = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.5]])
+        self.k_rep = 1
+        self.vel_max = 0.5
         self.planner = None
         self.obstacle = None
-        self.planner_dic = {}
-
-        # END MRSS
+        self.goal = None
+        self.planner_dic = None
         # END MRSS
 
     def map_callback(self, msg):
+
         self.map = json.loads(msg.data)
+        self.planner_dic = {}
+
         # TODO BEGIN MRSS: Use map for planning
+
+        rospy.loginfo(f"DEBUG: map callback.\nMessage: {msg}\nExtracted map:{self.map}")
+
         for k in self.map.keys():
             new_key = remove_special_characters(k)
             if 'obs' not in new_key:
+                rospy.loginfo(f"DEBUG: new_key has no obs: {new_key}")
                 self.planner_dic[new_key] = np.array(self.map[k])
             else:
+                rospy.loginfo(f"DEBUG: new_key HAS obs and must be obstacle: {new_key}")
                 self.planner_dic['obstacle'] = np.array(self.map[k])
-
-        goal = np.concatenate([self.planner_dic['goal'], [0.]])
-        # Potential Field Planner
-        self.planner = PotentialFieldPlanner(goal, 1 / self.rate_number, self.k_att, self.k_rep, self.vel_max)
-
         try:
-            self.obstacle = np.concatenate([self.planner_dic['obstacle'], [0.]])
-            self.planner.set_obstacle_distance(1.5)
-            self.planner.set_obstacle_position(self.obstacle)
+            rospy.loginfo(f"DEBUG: self.goal: {self.goal}")
+            self.goal = np.concatenate([self.planner_dic['goal'], [0.]])
+            rospy.loginfo(f"DEBUG: modified self.goal: {self.goal}")
+            self.planner = PotentialFieldPlanner(pos_end=self.goal,
+                                                 dt=1/self.rate_number,  # FIXME: double-check that this makes sense
+                                                 k_att=self.k_att,
+                                                 k_rep=self.k_rep,
+                                                 vel_max=self.vel_max)
+            n_goal = np.linalg.norm(self.goal[:2])
+            rospy.loginfo(f"DEBUG: goal norm: {n_goal}")
+            if 'obstacle' in self.planner_dic.keys():
+                rospy.loginfo(f"DEBUG: obstacle in planner_dic")
+                self.obstacle = np.concatenate([self.planner_dic['obstacle'], [0.]])
+            else:
+                rospy.loginfo(f"DEBUG: obstacle NOT in planner_dic")
+                pass
+
+            # Potential Field Planner
+
+            # END MRSS
+
+            # Twist
+            self.cmd = geometry_msgs.msg.Twist()
+
+            # TODO BEGIN MRSS: Update the current command
+        
+            if n_goal < 0.1 or self.goal is None:
+                rospy.loginfo(f"DEBUG: goal reached: {self.goal}")
+                self.cmd.linear.x = 0.
+                self.cmd.linear.y = 0.
+                self.cmd.angular.z = 0.
+            else:
+                # Vanilla commands
+                # self.cmd.linear.x = goal[0]/n_goal * 0.15
+                # self.cmd.linear.y = goal[1]/n_goal * 0.15
+                # angle_error = np.arctan2(goal[1], goal[0]) 
+                # self.cmd.angular.z = np.clip(angle_error, -.2, .2)
+                # rospy.logwarn("***eeeaasdfe****")
+
+                # Potential Field Planner commands
+
+                if self.obstacle is not None:
+                    self.planner.set_obstacle_distance(1.5)
+                    self.planner.set_obstacle_position(self.obstacle)
+                    pos_des, lin_vel = self.planner.get_avoidance_force([0., 0., 0.])
+                else:
+                    pos_des, lin_vel = self.planner.get_attractive_force([0., 0., 0.])
+                self.cmd.linear.x = lin_vel[0]
+                self.cmd.linear.y = lin_vel[1]
+                angle = np.arctan2(pos_des[1], pos_des[0]) 
+                self.cmd.angular.z = np.clip(angle, -.2, .2)
+                
+            # END MRSS
         except:
+            rospy.logwarn("DEBUG: ***CAUGHT EXCEPTION****")
             pass
 
-        # END MRSS
-
-        # Twist
-        self.cmd = geometry_msgs.msg.Twist()
-
-        # TODO BEGIN MRSS: Update the current command
-        n_goal = np.linalg.norm(goal[:2])
-        if n_goal < 0.1:
-            self.cmd.linear.x = 0.
-            self.cmd.linear.y = 0.
-            self.cmd.angular.z = 0.
-        else:
-            # Vanilla commands
-            # self.cmd.linear.x = goal[0]/n_goal * 0.15
-            # self.cmd.linear.y = goal[1]/n_goal * 0.15
-            # angle_error = np.arctan2(goal[1], goal[0]) 
-            # self.cmd.angular.z = np.clip(angle_error, -.2, .2)
-            # Potential Field Planner commands
-            if self.obstacle:
-                pos_des, lin_vel =	self.planner.get_avoidance_force([0., 0., 0.])
-            else:
-                pos_des, lin_vel =	self.planner.get_attractive_force([0., 0., 0.])
-            self.cmd.linear.x = lin_vel[0]
-            self.cmd.linear.y = lin_vel[1]
-            angle = np.arctan2(pos_des[1], pos_des[0]) 
-            self.cmd.angular.z = np.clip(angle, -.2, .2)
-            
-        # END MRSS
-
     def spin(self):
-        '''
+        """
         Spins the node.
-        '''
+        """
         try:
             while not rospy.is_shutdown():
                 if self.cmd is not None:
@@ -117,9 +141,9 @@ class Planner:
             rospy.loginfo("Shutting down planner.")
 
     def on_shutdown(self):
-        '''
+        """
         Called on node shutdown.
-        '''
+        """
         pass
 
 

@@ -37,9 +37,9 @@ class RLController:
         self.cmd = msg
 
     def spin(self):
-        '''
+        """
         Spins the node.
-        '''
+        """
         try:
             while not rospy.is_shutdown():
                 lin_x, lin_y, ang_z = self.cmd.linear.x, self.cmd.linear.y, self.cmd.angular.z
@@ -54,9 +54,9 @@ class RLController:
             rospy.loginfo("Shutting down controller.")
 
     def on_shutdown(self):
-        '''
+        """
         Called on node shutdown.
-        '''
+        """
         pass
 
 
